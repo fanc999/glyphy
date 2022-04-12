@@ -1,17 +1,24 @@
-#!/bin/sh
+#!/usr/bin/env python3
 
-if test "$#" = 0; then
-	echo "Usage: $0 DECL-SPEC FILE..."
-	exit 1
-fi
-decl="$1"
-shift
+import os
+import re
+import sys
 
-echo "$decl ="
-sed '
-s/\\/\\\\/g;
-s/"/\\"/g;
-s/^/"/;
-s/$/\\n"/;
-' "$@"
-echo ";"
+def stringize(argv):
+    if len(argv) == 1:
+        raise SystemExit('Usage: %s DECL-SPEC FILE...' % argv[0])
+
+    decl = argv[1]
+    for f in argv[2:]:
+        with open(f, 'r') as glsl:
+            fname = os.path.splitext(os.path.basename(f))
+            print('%s =' % decl)
+            lines = glsl.readlines()
+            for line in lines:
+                r1 = re.sub(r'\\', r'\\\\', line)
+                r2 = re.sub(r'"', r'\\"', r1)
+                result = re.sub(r'\n$', r'\\n', r2)
+                print('"%s"' % result)
+            print(';')
+
+sys.exit(stringize(sys.argv))
